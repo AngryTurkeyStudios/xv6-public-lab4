@@ -532,3 +532,22 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+int thread_create(void (*fn)(void*), void* stack, void* arg) {
+    return 0;
+}
+int thread_join() {
+    return 0;
+}
+int thread_exit() {
+    return 0;
+}
+int lock_init(lock_t *lock) {
+    return 0;
+}
+int lock_acquire(lock_t *lock) {
+    return 0;
+}
+int lock_release(lock_t *lock) {
+    return 0;
+}

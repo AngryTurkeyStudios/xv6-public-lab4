@@ -89,3 +89,62 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+/*int thread_create(void (*fn) (void*), void* stack, void* arg);
+int thread_join(void);
+int thread_exit(void);
+int lock_init(lock_t*);
+int lock_acquire(lock_t*);
+int lock_release(lock_t*);*/
+
+int
+sys_thread_create(void) {
+    void* runThread;
+    void* stack_thread;
+    void* arg_thread;
+    if (argptr(0, (void*)&runThread, sizeof(*runThread)) < 0) {
+        return -1;
+    }
+    if (argptr(0, (void*)&stack_thread, sizeof(*stack_thread)) < 0) {
+        return -1;
+    }
+    if (argptr(0, (void*)&arg_thread, sizeof(*arg_thread)) < 0) {
+        return -1;
+    }
+    return thread_create(runThread, stack_thread, arg_thread);
+    return 0;
+}
+int 
+sys_thread_join(void) {
+    return thread_join();
+}
+int 
+sys_thread_exit(void) {
+    return sys_thread_exit();
+}
+int 
+sys_lock_init(void) {
+    lock_t* lock;
+    if (argptr(0, (void*)&lock, sizeof(*lock)) < 0) {
+        return -1;
+    }
+
+    return lock_init(lock);
+}
+int 
+sys_lock_acquire(void) {
+    lock_t* lock;
+    if (argptr(0, (void*)&lock, sizeof(*lock)) < 0) {
+        return -1;
+    }
+    return lock_acquire(lock);
+
+}
+int 
+sys_lock_release(void) {
+    lock_t* lock;
+    if (argptr(0, (void*)&lock, sizeof(*lock)) < 0) {
+        return -1;
+    }
+    return lock_release(lock);
+
+}
