@@ -98,6 +98,7 @@ exec(char *path, char **argv)
   curproc->pgdir = pgdir;
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
+  cprintf("%s%d\n",curproc->name, (uint)elf.entry);
   curproc->tf->esp = sp;
   switchuvm(curproc);
   freevm(oldpgdir);

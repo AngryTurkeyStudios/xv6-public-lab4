@@ -89,12 +89,7 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
-/*int thread_create(void (*fn) (void*), void* stack, void* arg);
-int thread_join(void);
-int thread_exit(void);
-int lock_init(lock_t*);
-int lock_acquire(lock_t*);
-int lock_release(lock_t*);*/
+
 
 int
 sys_thread_create(void) {
@@ -111,7 +106,6 @@ sys_thread_create(void) {
         return -1;
     }
     return thread_create(runThread, stack_thread, arg_thread);
-    return 0;
 }
 int 
 sys_thread_join(void) {

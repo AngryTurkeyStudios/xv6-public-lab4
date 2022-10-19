@@ -335,7 +335,6 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -534,7 +533,53 @@ procdump(void)
 }
 
 int thread_create(void (*fn)(void*), void* stack, void* arg) {
-    return 0;
+    struct proc* np;
+    struct proc* curproc = myproc();
+    pde_t* pgdir;
+
+    // Allocate process.
+    if ((np = allocproc()) == 0)
+        return -1;
+
+    pgdir = curproc->pgdir;
+
+
+
+    // Copy process state from proc.
+    np->sz = curproc->sz;
+    np->parent = curproc;
+    *np->tf = *curproc->tf;
+
+  
+
+
+    *(uint*)(stack + PGSIZE - 2* sizeof(void *)) = (uint)arg;
+    *(uint*)(stack + PGSIZE - sizeof(void *)) = 0xffffffff;
+    np->tstack = stack;
+    np->tf->esp = (uint)stack + PGSIZE - 2 * sizeof(uint);
+    np->tf->ebp = np->tf->esp;
+    cprintf("%d\n", (uint)fn);
+    np->tf->eip = (uint)fn;
+
+
+
+    // Clear %eax so that fork returns 0 in the child.
+    np->tf->eax = 0;
+
+    for (int i = 0; i < NOFILE; i++)
+        if (curproc->ofile[i])
+            np->ofile[i] = filedup(curproc->ofile[i]);
+    np->cwd = idup(curproc->cwd);
+
+    safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+
+    acquire(&ptable.lock);
+
+    np->state = RUNNABLE;
+
+    release(&ptable.lock);
+
+    return np->pid;
 }
 int thread_join() {
     return 0;
