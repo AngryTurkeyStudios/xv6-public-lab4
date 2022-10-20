@@ -19,17 +19,19 @@ volatile unsigned int delay (unsigned int d) {
 }
 
 void do_work(void *arg){
-    printf(1,"test");
     int i; 
     int old;
    
+    printf(1, "Argument address passed in: 0x%x\n", (uint) arg);
     struct balance *b = (struct balance*) arg; 
+
     printf(1, "Starting do_work: s:%s\n", b->name);
 
     for (i = 0; i < b->amount; i++) { 
          old = total_balance;
          delay(100000);
          total_balance = old + 1;
+            printf(1, "balance:%d\n", i);
     }
   
     printf(1, "Done s:%x\n", b->name);
@@ -49,6 +51,8 @@ int main(int argc, char *argv[]) {
   s1 = malloc(4096);
   s2 = malloc(4096);
 
+    printf(1,"b1: 0x%x\n",(uint)&b1);
+    printf(1,"b2: 0x%x\n",(uint)&b2);
   t1 = thread_create(do_work, s1, (void*)&b1);
   t2 = thread_create(do_work, s2, (void*)&b2); 
 

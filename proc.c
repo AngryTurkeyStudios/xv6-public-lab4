@@ -535,33 +535,25 @@ procdump(void)
 int thread_create(void (*fn)(void*), void* stack, void* arg) {
     struct proc* np;
     struct proc* curproc = myproc();
-    pde_t* pgdir;
+    
 
     // Allocate process.
     if ((np = allocproc()) == 0)
         return -1;
 
-    pgdir = curproc->pgdir;
-
-
 
     // Copy process state from proc.
+    np->pgdir = curproc->pgdir;
     np->sz = curproc->sz;
     np->parent = curproc;
     *np->tf = *curproc->tf;
 
-  
-
-
-    *(uint*)(stack + PGSIZE - 2* sizeof(void *)) = (uint)arg;
-    *(uint*)(stack + PGSIZE - sizeof(void *)) = 0xffffffff;
+    *(uint*)(stack + PGSIZE -  sizeof(uint)) = (uint)(arg);
+    *(uint*)(stack + PGSIZE - 2*sizeof(uint)) = 0xffffffff;
     np->tstack = stack;
-    np->tf->esp = (uint)stack + PGSIZE - 2 * sizeof(uint);
-    np->tf->ebp = np->tf->esp;
-    cprintf("%d\n", (uint)fn);
+    np->tf->esp = (uint)(stack + PGSIZE -  2*sizeof(uint));
+    np->tf->ebp = np->tf->esp;  
     np->tf->eip = (uint)fn;
-
-
 
     // Clear %eax so that fork returns 0 in the child.
     np->tf->eax = 0;

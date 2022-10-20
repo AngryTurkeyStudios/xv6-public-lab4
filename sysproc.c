@@ -99,10 +99,10 @@ sys_thread_create(void) {
     if (argptr(0, (void*)&runThread, sizeof(*runThread)) < 0) {
         return -1;
     }
-    if (argptr(0, (void*)&stack_thread, sizeof(*stack_thread)) < 0) {
+    if (argptr(1, (void*)&stack_thread, sizeof(*stack_thread)) < 0) {
         return -1;
     }
-    if (argptr(0, (void*)&arg_thread, sizeof(*arg_thread)) < 0) {
+    if (argptr(2, (void*)&arg_thread, sizeof(*arg_thread)) < 0) {
         return -1;
     }
     return thread_create(runThread, stack_thread, arg_thread);
