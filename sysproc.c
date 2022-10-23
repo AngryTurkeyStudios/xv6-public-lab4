@@ -109,11 +109,15 @@ sys_thread_create(void) {
 }
 int 
 sys_thread_join(void) {
-    return thread_join();
+    void* stack;
+    if (argptr(0, (void*)&stack, sizeof(*stack)) < 0) {
+        return -1;
+    }
+    return thread_join(stack);
 }
 int 
 sys_thread_exit(void) {
-    return sys_thread_exit();
+    return thread_exit();
 }
 int 
 sys_lock_init(void) {

@@ -24,7 +24,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int thread_create(void (*fn) (void*), void *stack, void *arg);
-int thread_join(void);
+int thread_join(void **stack);
 int thread_exit(void);
 int lock_init(lock_t* lock);
 int lock_acquire(lock_t*);
