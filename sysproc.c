@@ -128,21 +128,31 @@ sys_lock_init(void) {
 
     return lock_init(lock);
 }
-int 
-sys_lock_acquire(void) {
+int
+sys_lock_free(void) {
     lock_t* lock;
     if (argptr(0, (void*)&lock, sizeof(*lock)) < 0) {
         return -1;
     }
-    return lock_acquire(lock);
+
+    return lock_free(lock);
+}
+
+int 
+sys_lock_acquire(void) {
+    int lock;
+    if (argint(0, &lock) < 0){
+        return -1;
+    }
+    return lock_acquire((lock_t)lock);
 
 }
 int 
 sys_lock_release(void) {
-    lock_t* lock;
-    if (argptr(0, (void*)&lock, sizeof(*lock)) < 0) {
+    int lock;
+    if (argint(0, &lock) < 0) {
         return -1;
     }
-    return lock_release(lock);
+    return lock_release((lock_t)lock);
 
 }

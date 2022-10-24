@@ -1,6 +1,7 @@
 struct stat;
 struct rtcdate;
 
+
 // system calls
 int fork(void);
 int exit(void) __attribute__((noreturn));
@@ -26,9 +27,10 @@ int uptime(void);
 int thread_create(void (*fn) (void*), void *stack, void *arg);
 int thread_join(void **stack);
 int thread_exit(void);
-int lock_init(lock_t* lock);
-int lock_acquire(lock_t*);
-int lock_release(lock_t*);
+int lock_init(lock_t *lockid);
+int lock_free(lock_t* lockid);
+int lock_acquire(lock_t lockid);
+int lock_release(lock_t lockid);
 
 // ulib.c
 int stat(const char*, struct stat*);

@@ -12,9 +12,15 @@ struct {
   struct proc proc[NPROC];
 } ptable;
 
+struct {
+    struct spinlock lock;
+    struct mutex mut[MAX_MUTEXES];
+} mtable;
+
 static struct proc *initproc;
 
 int nextpid = 1;
+int nextmid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
@@ -665,11 +671,99 @@ int thread_exit() {
   panic("zombie exit");
 }
 int lock_init(lock_t *lock) {
+    struct mutex *m;
+    acquire(&mtable.lock);
+    for (m = mtable.mut;  m < &mtable.mut[NPROC]; m++) {
+        if (m->state == M_UNUSED)
+            goto found;       
+    }
+    release(&mtable.lock);
+    *lock = 0;
+    return -1;
+
+found:
+    m->state = UNLOCKED;
+    m->mid = nextmid++;
+    *lock = m->mid;
+    release(&mtable.lock);
+        
     return 0;
 }
-int lock_acquire(lock_t *lock) {
+
+int lock_free(lock_t* lock) {
+    struct mutex* m;
+    acquire(&mtable.lock);
+    for (m = mtable.mut; m < &mtable.mut[MAX_MUTEXES]; m++) {
+        if (m->mid == *lock) {
+            if (m->state == UNLOCKED) {
+                goto found;
+            }
+            else {
+                release(&mtable.lock);
+                return -2;
+            }
+        }
+    }
+    release(&mtable.lock);
+    return -1;
+
+
+found:    
+    //spin until the atomic operation is successful
+    while (xchg(&m->state, M_UNUSED) != M_UNUSED) {
+    }
+    m->mid = 0;
+    *lock = m->mid;
+    release(&mtable.lock);
+
     return 0;
 }
-int lock_release(lock_t *lock) {
+
+int lock_acquire(lock_t lockid) {
+    struct mutex* m;
+    acquire(&mtable.lock);
+    for (m = mtable.mut; m < &mtable.mut[MAX_MUTEXES]; m++) {
+        if (m->mid == lockid){
+            if (m->state != M_UNUSED) {
+                goto found;                
+            }
+        }
+    }
+    release(&mtable.lock);
+    return -1;
+
+found:
+    while (m->state == LOCKED) {
+        sleep(m, &mtable.lock);
+    }
+    __sync_synchronize();
+    //spin until the atomic operation is successful
+    while (xchg(&m->state, LOCKED) != LOCKED) {
+    }
+
+    release(&mtable.lock);
+
+    return 0;
+}
+int lock_release(lock_t lockid) {
+    struct mutex* m;
+    acquire(&mtable.lock);
+    //find the lock identified 
+    for (m = mtable.mut; m < &mtable.mut[MAX_MUTEXES]; m++) {
+        if (m->mid == lockid) {
+            if (m->state == LOCKED) {
+                goto found;
+            }
+        }
+    }
+    release(&mtable.lock);
+    return -1;
+
+found:
+    //use the atomic operation to chage the state to unlocked
+    asm volatile("movl $2, %0" : "+m" (m->state) : );
+    wakeup1(m);
+    release(&mtable.lock);
+
     return 0;
 }

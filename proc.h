@@ -33,6 +33,7 @@ struct context {
 };
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+enum mutexstate {M_UNUSED, LOCKED, UNLOCKED};
 
 // Per-process state
 struct proc {
@@ -52,8 +53,15 @@ struct proc {
   char name[16];               // Process name (debugging)
 };
 
+struct mutex {
+	lock_t mid;
+	volatile enum mutexstate state;
+};
+
+
 // Process memory is laid out contiguously, low addresses first:
 //   text
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
