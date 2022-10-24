@@ -182,6 +182,7 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_threads_nosync\
+	_threads_sync\
 
 
 fs.img: mkfs README $(UPROGS)
@@ -256,6 +257,7 @@ EXTRA=\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 	threads_nosync.c\
+	threads_sync.c\
 
 dist:
 	rm -rf dist

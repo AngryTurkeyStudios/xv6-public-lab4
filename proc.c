@@ -538,6 +538,8 @@ procdump(void)
   }
 }
 
+// Creats a thread that runs the function fn with the void pointer argumet arg
+// returns -1 on error and 0 on success
 int thread_create(void (*fn)(void*), void* stack, void* arg) {
 
     //--------from fork start
@@ -594,6 +596,8 @@ int thread_create(void (*fn)(void*), void* stack, void* arg) {
 
     //--------from fork end
 }
+
+// uses the reference to the stack to choose which thread of this parent to join up with
 int thread_join(void **stack) {
   struct proc *p;
   int havekids, pid;
@@ -604,7 +608,7 @@ int thread_join(void **stack) {
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      //if the process has this process as a parent and shares address space
+      //if the process has this process as a parent and shares address space and is the one with this stack pointer this will be bypassed
       if(p->parent != curproc || p->pgdir != curproc->pgdir || p->tstack !=stack)
         continue;
       havekids = 1;
@@ -640,6 +644,8 @@ int thread_join(void **stack) {
     sleep(curproc, &ptable.lock);  //DOC: wait-sleep
   }
 }
+
+//exits the thread by turning the thread into a zombie to be harvested in thread_join
 int thread_exit() {  
   struct proc *curproc = myproc();
   struct proc *p;
@@ -670,9 +676,13 @@ int thread_exit() {
   sched();
   panic("zombie exit");
 }
+
+// Returns with an error code or 0 if successful
+// and returns the lock by modifying the lock at the address provided
 int lock_init(lock_t *lock) {
     struct mutex *m;
     acquire(&mtable.lock);
+    //finds the first unlocked mutex lock or reutrns -1 if none exist
     for (m = mtable.mut;  m < &mtable.mut[NPROC]; m++) {
         if (m->state == M_UNUSED)
             goto found;       
@@ -682,6 +692,7 @@ int lock_init(lock_t *lock) {
     return -1;
 
 found:
+    //initializes the state and the mid and sets the lock to the mid
     m->state = UNLOCKED;
     m->mid = nextmid++;
     *lock = m->mid;
@@ -690,6 +701,8 @@ found:
     return 0;
 }
 
+//Frees the lock of the specified value and changes the lock value to 0 upon success
+// returns -1 if the mid is not found and -2 if the mid is not unlocked
 int lock_free(lock_t* lock) {
     struct mutex* m;
     acquire(&mtable.lock);
@@ -712,6 +725,7 @@ found:
     //spin until the atomic operation is successful
     while (xchg(&m->state, M_UNUSED) != M_UNUSED) {
     }
+    //reset the mid to 0
     m->mid = 0;
     *lock = m->mid;
     release(&mtable.lock);
@@ -719,6 +733,8 @@ found:
     return 0;
 }
 
+//Uses the lock id returned in the lock init to find the lock int the mtable and then do an atomic operation 
+// to lock the mutex that was given
 int lock_acquire(lock_t lockid) {
     struct mutex* m;
     acquire(&mtable.lock);
@@ -745,6 +761,9 @@ found:
 
     return 0;
 }
+
+//Uses the lock id returned in the lock init to find the lock int the mtable and then do an atomic operation 
+// to unlock the mutex that was given
 int lock_release(lock_t lockid) {
     struct mutex* m;
     acquire(&mtable.lock);
