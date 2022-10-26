@@ -98,21 +98,23 @@ int lock_release(lock_t*);*/
 
 int
 sys_thread_create(void) {
-    void* runThread;
-    void* stack_thread;
-    void* arg_thread;
-    if (argptr(0, (void*)&runThread, sizeof(*runThread)) < 0) || argptr(1, (void*)&stack_thread, sizeof(*stack_thread)) < 0) || (argptr(2, (void*)&arg_thread, sizeof(*arg_thread)) < 0){
-        return -1;
-    }
-    return thread_create(runThread, stack_thread, arg_thread);
+  int fn, arg1, arg2, stack;
+  if(argint(0, &fn)<0 || argint(1, &arg1)<0 || argint(2, &arg2)<0 || argint(3, &stack)<0)
+    return -1;
+  return thread_create((void *)fn, (void *)arg1, (void *)arg2, (void *)stack);
 }
+
 int 
 sys_thread_join(void) {
-    return thread_join();
+    void* stack;
+    if (argptr(0, (void*)&stack, sizeof(*stack)) < 0) {
+        return -1;
+    }
+    return thread_join(stack);
 }
 int 
 sys_thread_exit(void) {
-    return sys_thread_exit();
+    return thread_exit();
 }
 int 
 sys_lock_init(void) {

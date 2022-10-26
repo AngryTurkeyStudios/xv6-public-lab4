@@ -223,7 +223,7 @@ fork(void)
 
 //Creates thread for function fn
 //returns 0 for success and -1 for error 
-int thread_create(void (*fn)(void*), void* stack, void* arg) {
+int thread_create(void (*fn) (void*,void*), void* stack, void* arg1, void* arg2) {
   struct proc *np; //new process
   struct proc *cp = myproc(); //current process
 
@@ -681,15 +681,6 @@ procdump(void)
   }
 }
 
-int thread_create(void (*fn)(void*), void* stack, void* arg) {
-    return 0;
-}
-int thread_join() {
-    return 0;
-}
-int thread_exit() {
-    return 0;
-}
 int lock_init(lock_t *lock) {
     return 0;
 }
