@@ -223,7 +223,6 @@ fork(void)
 
 //Creates thread for function fn
 //returns 0 for success and -1 for error 
-
 int thread_create(void (*fn)(void*), void* stack, void* arg) {
   struct proc *np; //new process
   struct proc *cp = myproc(); //current process
@@ -282,6 +281,93 @@ int thread_create(void (*fn)(void*), void* stack, void* arg) {
   return np->pid;
 
 }
+
+// references the stack and chooses which thread to join
+int thread_join(void **stack) {
+  struct proc *p;
+  int havekids, pid;
+  struct proc *cp = myproc();
+
+  acquire(&ptable.lock);
+  for(;;){
+    // Look through table finding zombie children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+
+      // Check if this is a child thread (parent or shared address space)
+      //if so, bypass
+      if(p->parent != cp || p->pgdir != p->parent->pgdir)
+        continue;
+        
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        pid = p->pid;
+
+        // Removes thread/ frees stack
+        kfree(p->kstack);
+        p->kstack = 0;
+
+        // Reset thread in process table
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+        stack = p->threadstack;
+        p->threadstack = 0;
+
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // Don't wait if we don't have any children
+    if(!havekids || cp->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit
+    sleep(cp, &ptable.lock);  
+  }
+
+}
+
+// exits the thread as a zombie
+// zombie is harvested in thread_join function above
+
+int thread_exit() {  
+  struct proc *cp = myproc();
+  struct proc *p;
+  if(cp == initproc) //initproc
+    panic("init proc exiting");
+
+  begin_op();
+  iput(cp->cwd);
+  end_op();
+  cp->cwd = 0;
+
+  acquire(&ptable.lock);
+
+  // Parent might be sleeping in wait().
+  wakeup1(cp->parent);
+
+  // Pass abandoned children to init proc
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == cp){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+  }
+
+  // zombie exits
+  cp->state = ZOMBIE;
+  sched();
+  panic("zombie exit");
+}
+
 
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
