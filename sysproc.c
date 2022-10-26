@@ -101,17 +101,10 @@ sys_thread_create(void) {
     void* runThread;
     void* stack_thread;
     void* arg_thread;
-    if (argptr(0, (void*)&runThread, sizeof(*runThread)) < 0) {
-        return -1;
-    }
-    if (argptr(0, (void*)&stack_thread, sizeof(*stack_thread)) < 0) {
-        return -1;
-    }
-    if (argptr(0, (void*)&arg_thread, sizeof(*arg_thread)) < 0) {
+    if (argptr(0, (void*)&runThread, sizeof(*runThread)) < 0) || argptr(1, (void*)&stack_thread, sizeof(*stack_thread)) < 0) || (argptr(2, (void*)&arg_thread, sizeof(*arg_thread)) < 0){
         return -1;
     }
     return thread_create(runThread, stack_thread, arg_thread);
-    return 0;
 }
 int 
 sys_thread_join(void) {

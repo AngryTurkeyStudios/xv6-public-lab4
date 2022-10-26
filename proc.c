@@ -221,6 +221,68 @@ fork(void)
   return pid;
 }
 
+//Creates thread for function fn
+//returns 0 for success and -1 for error 
+
+int thread_create(void (*fn)(void*), void* stack, void* arg) {
+  struct proc *np; //new process
+  struct proc *cp = myproc(); //current process
+
+  // Allocate process.
+  if((np = allocproc()) == 0)
+    return -1;
+
+  //copies data from process to the new thread
+    np->pgdir = cp->pgdir; //copies the page directory 
+    np->sz = cp->sz;
+    np->parent = cp;
+    *np->tf = *cp->tf;
+
+  void * sarg1, *sarg2, *sret;
+
+  // address to thread stack
+  sret = stack + PGSIZE - 3 * sizeof(void *);
+  *(uint*)sret = 0xFFFFFFF;
+
+  // rgument to thread stack
+  sarg1 = stack + PGSIZE - 2 * sizeof(void *);
+  *(uint*)sarg1 = (uint)arg1;
+
+  // second argument to thread stack
+  sarg2 = stack + PGSIZE - 1 * sizeof(void *);
+  *(uint*)sarg2 = (uint)arg2;
+
+  //  address of new stack in the esp stack pointer and save address
+  np->tf->esp = (uint) stack;
+  np->threadstack = stack;
+
+  // stack pointer to appropriate address
+  np->tf->esp += PGSIZE - 3 * sizeof(void*);
+  np->tf->ebp = np->tf->esp;
+
+  // instruction pointer to function
+  np->tf->eip = (uint) fn;
+
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+
+  for (int i = 0; i < NOFILE; i++)
+    if (cp->ofile[i])
+        np->ofile[i] = filedup(cp->ofile[i]);
+  np->cwd = idup(cp->cwd);
+
+  safestrcpy(np->name, cp->name, sizeof(cp->name));
+
+  acquire(&ptable.lock);
+
+  np->state = RUNNABLE;
+
+  release(&ptable.lock);
+
+  return np->pid;
+
+}
+
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
