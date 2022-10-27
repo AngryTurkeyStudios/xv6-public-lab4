@@ -12,9 +12,16 @@ struct {
   struct proc proc[NPROC];
 } ptable;
 
+struct {
+  struct spinlock lock;
+  struct mutex m[MAX_MUTEXES];
+} mtable;
+
 static struct proc *initproc;
 
 int nextpid = 1;
+//int nexttid = 1;
+int nextmid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
@@ -682,11 +689,51 @@ procdump(void)
 }
 
 int lock_init(lock_t *lock) {
+    struct mutex *m;
+    acquire(&mtable.lock);
+    // tries to find the first unlocked mutex lock
+    for(m = mtable.m; m < &mtable.m[NPROC]; m++);
+
+    if(m == &mtable.m[NPROC] || m->state == M_UNUSED)
+    {
+      release(&mtable.lock);
+      return -1;
+    }
+
+    while(m->state == M_LOCKED)
+      sleep(m, &mtable.lock);
+
+    if(m->state != M_UNLOCKED)
+    {
+      release(&mtable.lock);
+      return -1; 
+    }
+
+    m->state = M_LOCKED;
+
+    release(&mtable.lock);
+
     return 0;
 }
+
 int lock_acquire(lock_t *lock) {
     return 0;
 }
 int lock_release(lock_t *lock) {
-    return 0;
+  struct mutex *m;
+  
+  acquire(&mtable.lock);
+  for(m = mtable.m; m < &mtable.m[NPROC]; m++);
+
+  if(m == &mtable.m[NPROC] || m->state != M_LOCKED)
+  {
+    release(&mtable.lock);
+    return -1;
+  }
+
+  m->state = M_UNLOCKED;
+  wakeup1(m);
+
+  release(&mtable.lock);
+  return 0;
 }

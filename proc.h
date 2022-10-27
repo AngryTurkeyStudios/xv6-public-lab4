@@ -33,6 +33,7 @@ struct context {
 };
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+enum mutexstate {M_UNUSED, M_LOCKED, M_UNLOCKED};
 
 // Per-process state
 struct proc {
@@ -50,6 +51,11 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   void *threadstack;           // Address of thread stack
+};
+
+struct mutex {
+	lock_t mid;
+	volatile enum mutexstate state;
 };
 
 // Process memory is laid out contiguously, low addresses first:
