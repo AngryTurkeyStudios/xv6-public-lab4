@@ -131,7 +131,7 @@ sys_lock_acquire(void) {
     if (argptr(0, (void*)&lock, sizeof(*lock)) < 0) {
         return -1;
     }
-    return lock_acquire(lock);
+    return lock_acquire((lock_t)lock);
 
 }
 int 

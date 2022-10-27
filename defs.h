@@ -124,7 +124,7 @@ int				thread_create(void (*fn) (void*,void*), void* stack, void* arg1, void* ar
 int				thread_join(void ** stack); 
 int				thread_exit(void);
 int				lock_init(lock_t*);
-int				lock_acquire(lock_t*);
+int				lock_acquire(lock_t);
 int				lock_release(lock_t*);
 
 // swtch.S

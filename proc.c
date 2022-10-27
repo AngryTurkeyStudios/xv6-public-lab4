@@ -716,7 +716,8 @@ int lock_init(lock_t *lock) {
     return 0;
 }
 
-int lock_acquire(lock_t *lock) {
+int lock_acquire(lock_t lockid) {
+
     return 0;
 }
 int lock_release(lock_t *lock) {
